@@ -5,6 +5,7 @@ type Hysteria2 struct {
 	Name           string   `yaml:"name"`
 	Server         string   `yaml:"server"`
 	Port           int      `yaml:"port"`
+	UDP            bool     `yaml:"udp,omitempty"`
 	Up             string   `yaml:"up,omitempty"`
 	Down           string   `yaml:"down,omitempty"`
 	Password       string   `yaml:"password,omitempty"`
@@ -25,11 +26,12 @@ func ProxyToHysteria2(p Proxy) Hysteria2 {
 		Name:           p.Name,
 		Server:         p.Server,
 		Port:           p.Port,
+		UDP:            p.UDP,
 		Up:             p.Up,
 		Down:           p.Down,
 		Password:       p.Password,
 		Obfs:           p.Obfs,
-		ObfsPassword:   p.ObfsParam,
+		ObfsPassword:   p.ObfsPassword,
 		SNI:            p.Sni,
 		SkipCertVerify: p.SkipCertVerify,
 		Fingerprint:    p.Fingerprint,

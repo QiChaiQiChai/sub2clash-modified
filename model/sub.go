@@ -18,63 +18,64 @@ type NodeList struct {
 }
 
 type Subscription struct {
+	Mode                  string   `yaml:"mode,omitempty" json:"mode"`
+	IPv6                  bool     `yaml:"ipv6,omitempty" json:"ipv6"`
+	MixedPort             int      `yaml:"mixed-port,omitempty" json:"mixed-port"`
+	AllowLan              bool     `yaml:"allow-lan,omitempty" json:"allow-lan"`
+	LogLevel              string   `yaml:"log-level,omitempty" json:"log-level"`
+	Interface             string   `yaml:"interface-name,omitempty"`
 	Port                  int      `yaml:"port,omitempty" json:"port"`
 	SocksPort             int      `yaml:"socks-port,omitempty" json:"socks-port"`
 	RedirPort             int      `yaml:"redir-port,omitempty" json:"redir-port"`
 	TProxyPort            int      `yaml:"tproxy-port,omitempty" json:"tproxy-port"`
-	MixedPort             int      `yaml:"mixed-port,omitempty" json:"mixed-port"`
+	Secret                string   `yaml:"secret,omitempty"`
+	ExternalController    string   `yaml:"external-controller,omitempty"`
+	ExternalUI            string   `yaml:"external-ui,omitempty"`
+	KeepAliveInterval       int    `yaml:"keep-alive-interval,omitempty"`
+	FindProcessMode         string `yaml:"find-process-mode,omitempty" json:"find-process-mode"`
+	ExternalControllerTLS string   `yaml:"external-controller-tls,omitempty"`
+	ExternalUIName        string   `yaml:"external-ui-name,omitempty" json:"external-ui-name"`
+	ExternalUIURL         string   `yaml:"external-ui-url,omitempty" json:"external-ui-url"`
+	UnifiedDelay          bool     `yaml:"unified-delay,omitempty" json:"unified-delay"`
+	TCPConcurrent           bool   `yaml:"tcp-concurrent,omitempty" json:"tcp-concurrent"`
+	Authentication        []string `yaml:"authentication,omitempty" json:"authentication"`
+	SkipAuthPrefixes      []string `yaml:"skip-auth-prefixes,omitempty"`
+	RawTLS        TLS                       `yaml:"tls,omitempty"`
+	GlobalClientFingerprint string `yaml:"global-client-fingerprint,omitempty"`
+	GeodataMode             bool   `yaml:"geodata-mode,omitempty" json:"geodata-mode"`
+	GeoAutoUpdate           bool   `yaml:"geo-auto-update,omitempty" json:"geo-auto-update"`
+	GeoUpdateInterval       int    `yaml:"geo-update-interval,omitempty" json:"geo-update-interval"`
+	GeodataLoader           string `yaml:"geodata-loader,omitempty" json:"geodata-loader"`
+	GeositeMatcher          string `yaml:"geosite-matcher,omitempty" json:"geosite-matcher"`
+	GeoXUrl       GeoXUrl                   `yaml:"geox-url,omitempty"`
+	GlobalUA                string `yaml:"global-ua,omitempty"`
+	Profile       Profile                   `yaml:"profile,omitempty"`
+	LanAllowedIPs         []string `yaml:"lan-allowed-ips,omitempty"`
+	LanDisAllowedIPs      []string `yaml:"lan-disallowed-ips,omitempty"`
+
 	ShadowSocksConfig     string   `yaml:"ss-config,omitempty"`
 	VmessConfig           string   `yaml:"vmess-config,omitempty"`
 	InboundTfo            bool     `yaml:"inbound-tfo,omitempty"`
 	InboundMPTCP          bool     `yaml:"inbound-mptcp,omitempty"`
-	Authentication        []string `yaml:"authentication,omitempty" json:"authentication"`
-	SkipAuthPrefixes      []string `yaml:"skip-auth-prefixes,omitempty"`
-	LanAllowedIPs         []string `yaml:"lan-allowed-ips,omitempty"`
-	LanDisAllowedIPs      []string `yaml:"lan-disallowed-ips,omitempty"`
-	AllowLan              bool     `yaml:"allow-lan,omitempty" json:"allow-lan"`
 	BindAddress           string   `yaml:"bind-address,omitempty" json:"bind-address"`
-	Mode                  string   `yaml:"mode,omitempty" json:"mode"`
-	UnifiedDelay          bool     `yaml:"unified-delay,omitempty" json:"unified-delay"`
-	LogLevel              string   `yaml:"log-level,omitempty" json:"log-level"`
-	IPv6                  bool     `yaml:"ipv6,omitempty" json:"ipv6"`
-	ExternalController    string   `yaml:"external-controller,omitempty"`
-	ExternalControllerTLS string   `yaml:"external-controller-tls,omitempty"`
-	ExternalUI            string   `yaml:"external-ui,omitempty"`
-	ExternalUIURL         string   `yaml:"external-ui-url,omitempty" json:"external-ui-url"`
-	ExternalUIName        string   `yaml:"external-ui-name,omitempty" json:"external-ui-name"`
-	Secret                string   `yaml:"secret,omitempty"`
-	Interface             string   `yaml:"interface-name,omitempty"`
 	RoutingMark           int      `yaml:"routing-mark,omitempty"`
 	//Tunnels                 []LC.Tunnel       `yaml:"tunnels,omitempty"`
-	GeoAutoUpdate           bool   `yaml:"geo-auto-update,omitempty" json:"geo-auto-update"`
-	GeoUpdateInterval       int    `yaml:"geo-update-interval,omitempty" json:"geo-update-interval"`
-	GeodataMode             bool   `yaml:"geodata-mode,omitempty" json:"geodata-mode"`
-	GeodataLoader           string `yaml:"geodata-loader,omitempty" json:"geodata-loader"`
-	GeositeMatcher          string `yaml:"geosite-matcher,omitempty" json:"geosite-matcher"`
-	TCPConcurrent           bool   `yaml:"tcp-concurrent,omitempty" json:"tcp-concurrent"`
-	FindProcessMode         string `yaml:"find-process-mode,omitempty" json:"find-process-mode"`
-	GlobalClientFingerprint string `yaml:"global-client-fingerprint,omitempty"`
-	GlobalUA                string `yaml:"global-ua,omitempty"`
-	KeepAliveInterval       int    `yaml:"keep-alive-interval,omitempty"`
 
 	Sniffer       RawSniffer                `yaml:"sniffer,omitempty" json:"sniffer"`
-	ProxyProvider map[string]map[string]any `yaml:"proxy-providers,omitempty"`
-	RuleProviders map[string]RuleProvider   `yaml:"rule-providers,omitempty"`
 	Hosts         map[string]any            `yaml:"hosts,omitempty" json:"hosts"`
 	NTP           RawNTP                    `yaml:"ntp,omitempty" json:"ntp"`
-	DNS           RawDNS                    `yaml:"dns,omitempty" json:"dns"`
 	Tun           RawTun                    `yaml:"tun,omitempty"`
+	DNS           RawDNS                    `yaml:"dns,omitempty" json:"dns"`
 	TuicServer    RawTuicServer             `yaml:"tuic-server,omitempty"`
 	EBpf          EBpf                      `yaml:"ebpf,omitempty"`
 	IPTables      IPTables                  `yaml:"iptables,omitempty"`
 	Experimental  Experimental              `yaml:"experimental,omitempty"`
-	Profile       Profile                   `yaml:"profile,omitempty"`
-	GeoXUrl       GeoXUrl                   `yaml:"geox-url,omitempty"`
+	ProxyProvider map[string]map[string]any `yaml:"proxy-providers,omitempty"`
+	RuleProviders map[string]RuleProvider   `yaml:"rule-providers,omitempty"`
 	Proxies       []Proxy                   `yaml:"proxies,omitempty"`
 	ProxyGroups   []ProxyGroup              `yaml:"proxy-groups,omitempty"`
 	Rules         []string                  `yaml:"rules,omitempty"`
 	SubRules      map[string][]string       `yaml:"sub-rules,omitempty"`
-	RawTLS        TLS                       `yaml:"tls,omitempty"`
 	Listeners     []map[string]any          `yaml:"listeners,omitempty"`
 
 	ClashForAndroid RawClashForAndroid `yaml:"clash-for-android,omitempty" json:"clash-for-android"`
@@ -93,8 +94,8 @@ type TLS struct {
 
 type GeoXUrl struct {
 	GeoIp   string `yaml:"geoip,omitempty" json:"geoip"`
-	Mmdb    string `yaml:"mmdb,omitempty" json:"mmdb"`
 	GeoSite string `yaml:"geosite,omitempty" json:"geosite"`
+	Mmdb    string `yaml:"mmdb,omitempty" json:"mmdb"`
 }
 
 type Experimental struct {
@@ -177,13 +178,12 @@ type RawFallbackFilter struct {
 
 type RawTun struct {
 	Enable              bool     `yaml:"enable,omitempty" json:"enable"`
-	Device              string   `yaml:"device,omitempty" json:"device"`
 	Stack               string   `yaml:"stack,omitempty" json:"stack"`
-	DNSHijack           []string `yaml:"dns-hijack,omitempty" json:"dns-hijack"`
 	AutoRoute           bool     `yaml:"auto-route,omitempty" json:"auto-route"`
 	AutoDetectInterface bool     `yaml:"auto-detect-interface,omitempty"`
 	RedirectToTun       []string `yaml:"-,omitempty" json:"-"`
-
+	DNSHijack           []string `yaml:"dns-hijack,omitempty" json:"dns-hijack"`
+	Device              string   `yaml:"device,omitempty" json:"device"`
 	MTU        uint32 `yaml:"mtu,omitempty" json:"mtu,omitempty"`
 	GSO        bool   `yaml:"gso,omitempty" json:"gso,omitempty"`
 	GSOMaxSize uint32 `yaml:"gso-max-size,omitempty" json:"gso-max-size,omitempty"`

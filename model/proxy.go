@@ -59,6 +59,7 @@ type Proxy struct {
 	Ports               string         `yaml:"ports,omitempty"`
 	AuthStringOLD       string         `yaml:"auth_str,omitempty"`
 	AuthString          string         `yaml:"auth-str,omitempty"`
+	ObfsPassword        string   `yaml:"obfs-password,omitempty"`
 }
 
 func (p Proxy) MarshalYAML() (interface{}, error) {

@@ -23,6 +23,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set repository name to lowercase
+        id: set_repo_lowercase
+        run: echo "::set-output name=repo_lowercase::$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
+
       - name: Set tag name
         id: set_tag
         run: |
@@ -51,7 +55,7 @@ jobs:
             dev=true
             version=${{ github.sha }}
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ steps.set_tag.outputs.tag }}
+          tags: ghcr.io/${{ steps.set_repo_lowercase.outputs.repo_lowercase }}:${{ steps.set_tag.outputs.tag }}
 
       - name: Build and push Docker image for tags
         if: steps.check_tag.outputs.triggered_by_tag == 'true'
@@ -66,4 +70,3 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ steps.set_tag.outputs.tag }}
             ghcr.io/${{ github.repository }}:latest
-

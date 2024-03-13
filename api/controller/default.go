@@ -114,17 +114,6 @@ func BuildSub(clashType model.ClashType, query validator.SubValidator, template 
 			proxyList[i].Name = strings.TrimSpace(proxyList[i].SubName) + " " + strings.TrimSpace(proxyList[i].Name)
 		}
 	}
-	// 去掉配置相同的节点
-	proxies := make(map[string]*model.Proxy)
-	newProxies := make([]model.Proxy, 0, len(proxyList))
-	for i := range proxyList {
-		key := proxyList[i].Server + ":" + strconv.Itoa(proxyList[i].Port) + ":" + proxyList[i].Type
-		if _, exist := proxies[key]; !exist {
-			proxies[key] = &proxyList[i]
-			newProxies = append(newProxies, proxyList[i])
-		}
-	}
-	proxyList = newProxies
 	// 删除节点
 	if strings.TrimSpace(query.Remove) != "" {
 		newProxyList := make([]model.Proxy, 0, len(proxyList))
@@ -165,6 +154,172 @@ func BuildSub(clashType model.ClashType, query validator.SubValidator, template 
 			}
 		}
 	}
+	// 定义国家/地区的 emoji 正则表达式映射
+	var CountryEmojiRegexMap = []struct {
+		Emoji string
+		Regex *regexp.Regexp
+	}{
+		{Emoji: "🇭🇰", Regex: regexp.MustCompile("香港|沪港|呼港|中港|HKT|HKBN|HGC|WTT|CMI|穗港|广港|京港|🇭🇰|HK|Hongkong|Hong Kong|HongKong|HONG KONG")},
+		{Emoji: "🇹🇼", Regex: regexp.MustCompile("台湾|台灣|臺灣|台北|台中|新北|彰化|台|CHT|HINET|TW|Taiwan|TAIWAN")},
+		{Emoji: "🇲🇴", Regex: regexp.MustCompile("澳门|澳門|CTM|MAC|Macao|Macau")},
+		{Emoji: "🇸🇬", Regex: regexp.MustCompile("新加坡|狮城|獅城|沪新|京新|泉新|穗新|深新|杭新|广新|廣新|滬新|SG|Singapore|SINGAPORE")},
+		{Emoji: "🇯🇵", Regex: regexp.MustCompile("日本|东京|大阪|埼玉|京日|苏日|沪日|广日|上日|穗日|川日|中日|泉日|杭日|深日|JP|Japan|JAPAN")},
+		{Emoji: "🇺🇸", Regex: regexp.MustCompile("美国|美國|京美|硅谷|凤凰城|洛杉矶|西雅图|圣何塞|芝加哥|哥伦布|纽约|广美|USA|America|United States")},
+		{Emoji: "🇰🇷", Regex: regexp.MustCompile("韩国|韓國|首尔|韩|韓|春川|KOR|KR|Kr|Korea")},
+		{Emoji: "🇰🇵", Regex: regexp.MustCompile("朝鲜|KP|North Korea")},
+		{Emoji: "🇷🇺", Regex: regexp.MustCompile("俄罗斯|俄羅斯|毛子|俄国|RU|RUS|Russia")},
+		{Emoji: "🇮🇳", Regex: regexp.MustCompile("印度|孟买|IND|India|INDIA|Mumbai")},
+		{Emoji: "🇮🇩", Regex: regexp.MustCompile("印尼|印度尼西亚|雅加达|ID|IDN|Indonesia")},
+		{Emoji: "🇬🇧", Regex: regexp.MustCompile("英国|英國|伦敦|UK|England|United Kingdom|Britain")},
+		{Emoji: "🇩🇪", Regex: regexp.MustCompile("德国|德國|法兰克福|🇩🇪|German|GERMAN")},
+		{Emoji: "🇫🇷", Regex: regexp.MustCompile("法国|法國|巴黎|France")},
+		{Emoji: "🇩🇰", Regex: regexp.MustCompile("丹麦|丹麥|DK|DNK|Denmark")},
+		{Emoji: "🇳🇴", Regex: regexp.MustCompile("挪威|Norway")},
+		{Emoji: "🇮🇹", Regex: regexp.MustCompile("意大利|義大利|米兰|Italy|Nachash")},
+		{Emoji: "🇻🇦", Regex: regexp.MustCompile("梵蒂冈|梵蒂岡|Vatican City")},
+		{Emoji: "🇧🇪", Regex: regexp.MustCompile("比利时|比利時|Belgium")},
+		{Emoji: "🇦🇺", Regex: regexp.MustCompile("澳大利亚|澳洲|墨尔本|悉尼|Australia|Sydney")},
+		{Emoji: "🇨🇦", Regex: regexp.MustCompile("加拿大|蒙特利尔|温哥华|多伦多|滑铁卢|楓葉|枫叶|CA|CAN|Waterloo|Canada|CANADA")},
+		{Emoji: "🇲🇾", Regex: regexp.MustCompile("马来西亚|马来|馬來|MY|Malaysia|MALAYSIA")},
+		{Emoji: "🇲🇻", Regex: regexp.MustCompile("马尔代夫|馬爾代夫|Maldives")},
+		{Emoji: "🇹🇷", Regex: regexp.MustCompile("土耳其|伊斯坦布尔|TR_|TUR|Turkey")},
+		{Emoji: "🇵🇭", Regex: regexp.MustCompile("菲律宾|菲律賓|Philippines")},
+		{Emoji: "🇹🇭", Regex: regexp.MustCompile("泰国|泰國|曼谷|Thailand")},
+		{Emoji: "🇻🇳", Regex: regexp.MustCompile("越南|胡志明市|Vietnam")},
+		{Emoji: "🇰🇭", Regex: regexp.MustCompile("柬埔寨|Cambodia")},
+		{Emoji: "🇱🇦", Regex: regexp.MustCompile("老挝|Laos")},
+		{Emoji: "🇧🇩", Regex: regexp.MustCompile("孟加拉|Bengal")},
+		{Emoji: "🇲🇲", Regex: regexp.MustCompile("缅甸|緬甸|Myanmar")},
+		{Emoji: "🇱🇧", Regex: regexp.MustCompile("黎巴嫩|Lebanon")},
+		{Emoji: "🇺🇦", Regex: regexp.MustCompile("乌克兰|烏克蘭|Ukraine")},
+		{Emoji: "🇭🇺", Regex: regexp.MustCompile("匈牙利|Hungary")},
+		{Emoji: "🇨🇭", Regex: regexp.MustCompile("瑞士|苏黎世|Switzerland")},
+		{Emoji: "🇸🇪", Regex: regexp.MustCompile("瑞典|SE|Sweden")},
+		{Emoji: "🇱🇺", Regex: regexp.MustCompile("卢森堡|Luxembourg")},
+		{Emoji: "🇦🇹", Regex: regexp.MustCompile("奥地利|奧地利|维也纳|Austria")},
+		{Emoji: "🇨🇿", Regex: regexp.MustCompile("捷克|Czechia")},
+		{Emoji: "🇬🇷", Regex: regexp.MustCompile("希腊|希臘|Greece")},
+		{Emoji: "🇮🇸", Regex: regexp.MustCompile("冰岛|冰島|ISL|Iceland")},
+		{Emoji: "🇳🇿", Regex: regexp.MustCompile("新西兰|新西蘭|New Zealand")},
+		{Emoji: "🇮🇪", Regex: regexp.MustCompile("爱尔兰|愛爾蘭|都柏林Ireland|IRELAND")},
+		{Emoji: "🇮🇲", Regex: regexp.MustCompile("马恩岛|馬恩島|Mannin|Isle of Man")},
+		{Emoji: "🇱🇹", Regex: regexp.MustCompile("立陶宛|Lithuania")},
+		{Emoji: "🇫🇮", Regex: regexp.MustCompile("芬兰|芬蘭|赫尔辛基|Finland")},
+		{Emoji: "🇦🇷", Regex: regexp.MustCompile("阿根廷|Argentina")},
+		{Emoji: "🇺🇾", Regex: regexp.MustCompile("乌拉圭|烏拉圭|Uruguay")},
+		{Emoji: "🇵🇾", Regex: regexp.MustCompile("巴拉|Paraguay")},
+		{Emoji: "🇯🇲", Regex: regexp.MustCompile("牙买加|牙買加|Jamaica")},
+		{Emoji: "🇸🇷", Regex: regexp.MustCompile("苏里南|蘇里南|Suriname")},
+		{Emoji: "🇨🇼", Regex: regexp.MustCompile("库拉索|庫拉索|Curaçao")},
+		{Emoji: "🇨🇴", Regex: regexp.MustCompile("哥伦比亚|Colombia")},
+		{Emoji: "🇪🇨", Regex: regexp.MustCompile("厄瓜多尔|Ecuador")},
+		{Emoji: "🇪🇸", Regex: regexp.MustCompile("西班牙|Spain")},
+		{Emoji: "🇵🇹", Regex: regexp.MustCompile("葡萄牙|Portugal")},
+		{Emoji: "🇮🇱", Regex: regexp.MustCompile("以色列|Israel")},
+		{Emoji: "🇸🇦", Regex: regexp.MustCompile("沙特|利雅得|吉达|Saudi|Saudi Arabia")},
+		{Emoji: "🇲🇳", Regex: regexp.MustCompile("蒙古|Mongolia")},
+		{Emoji: "🇦🇪", Regex: regexp.MustCompile("阿联酋|迪拜|Dubai|United Arab Emirates")},
+		{Emoji: "🇦🇿", Regex: regexp.MustCompile("阿塞拜疆|Azerbaijan")},
+		{Emoji: "🇦🇲", Regex: regexp.MustCompile("亚美尼亚|亞美尼|Armenia")},
+		{Emoji: "🇰🇿", Regex: regexp.MustCompile("哈萨克斯坦|哈薩克斯坦|Kazakhstan")},
+		{Emoji: "🇰🇬", Regex: regexp.MustCompile("吉尔吉斯坦|吉尔吉斯斯坦|Kyrghyzstan")},
+		{Emoji: "🇺🇿", Regex: regexp.MustCompile("乌兹别克斯坦|烏茲別克斯坦|Uzbekistan")},
+		{Emoji: "🇧🇷", Regex: regexp.MustCompile("巴西|圣保罗|维涅杜|Brazil")},
+		{Emoji: "🇨🇱", Regex: regexp.MustCompile("智利|Chile|CHILE")},
+		{Emoji: "🇵🇪", Regex: regexp.MustCompile("秘鲁|祕魯|Peru")},
+		{Emoji: "🇨🇺", Regex: regexp.MustCompile("古巴|Cuba")},
+		{Emoji: "🇧🇹", Regex: regexp.MustCompile("不丹|Bhutan")},
+		{Emoji: "🇦🇩", Regex: regexp.MustCompile("安道尔|Andorra")},
+		{Emoji: "🇲🇹", Regex: regexp.MustCompile("马耳他|Malta")},
+		{Emoji: "🇲🇨", Regex: regexp.MustCompile("摩纳哥|摩納哥|Monaco")},
+		{Emoji: "🇷🇴", Regex: regexp.MustCompile("罗马尼亚|Rumania")},
+		{Emoji: "🇧🇬", Regex: regexp.MustCompile("保加利亚|保加利亞|Bulgaria")},
+		{Emoji: "🇭🇷", Regex: regexp.MustCompile("克罗地亚|克羅地亞|Croatia")},
+		{Emoji: "🇲🇰", Regex: regexp.MustCompile("北马其顿|北馬其頓|North Macedonia")},
+		{Emoji: "🇷🇸", Regex: regexp.MustCompile("塞尔维亚|塞爾維|Seville|Sevilla")},
+		{Emoji: "🇨🇾", Regex: regexp.MustCompile("塞浦路|Cyprus")},
+		{Emoji: "🇱🇻", Regex: regexp.MustCompile("拉脱维亚|Latvia|Latvija")},
+		{Emoji: "🇲🇩", Regex: regexp.MustCompile("摩尔多瓦|摩爾多瓦|Moldova")},
+		{Emoji: "🇸🇰", Regex: regexp.MustCompile("斯洛伐克|Slovakia")},
+		{Emoji: "🇪🇪", Regex: regexp.MustCompile("爱沙尼亚|Estonia")},
+		{Emoji: "🇧🇾", Regex: regexp.MustCompile("白俄罗斯|白俄羅斯|White Russia|Republic of Belarus|Belarus")},
+		{Emoji: "🇧🇳", Regex: regexp.MustCompile("文莱|汶萊|BRN|Negara Brunei Darussalam")},
+		{Emoji: "🇬🇺", Regex: regexp.MustCompile("关岛|關島|Guam")},
+		{Emoji: "🇫🇯", Regex: regexp.MustCompile("斐济|斐濟|Fiji")},
+		{Emoji: "🇯🇴", Regex: regexp.MustCompile("约旦|約旦|Jordan")},
+		{Emoji: "🇬🇪", Regex: regexp.MustCompile("格鲁吉亚|格魯吉亞|Georgia")},
+		{Emoji: "🇬🇮", Regex: regexp.MustCompile("直布罗陀|直布羅陀|Gibraltar")},
+		{Emoji: "🇸🇲", Regex: regexp.MustCompile("圣马力诺|聖馬利諾|San Marino")},
+		{Emoji: "🇳🇵", Regex: regexp.MustCompile("尼泊尔|Nepal")},
+		{Emoji: "🇫🇴", Regex: regexp.MustCompile("法罗群岛|法羅群島|Faroe Islands")},
+		{Emoji: "🇦🇽", Regex: regexp.MustCompile("奥兰群岛|奧蘭群島|Åland")},
+		{Emoji: "🇸🇮", Regex: regexp.MustCompile("斯洛文尼亚|斯洛文尼|Slovenia")},
+		{Emoji: "🇦🇱", Regex: regexp.MustCompile("阿尔巴尼亚|阿爾巴尼|Albania")},
+		{Emoji: "🇹🇱", Regex: regexp.MustCompile("东帝汶|東帝汶|East Timor")},
+		{Emoji: "🇵🇦", Regex: regexp.MustCompile("巴拿马|巴拿馬|Panama")},
+		{Emoji: "🇧🇲", Regex: regexp.MustCompile("百慕大|Bermuda")},
+		{Emoji: "🇬🇱", Regex: regexp.MustCompile("格陵兰|格陵蘭|Greenland")},
+		{Emoji: "🇨🇷", Regex: regexp.MustCompile("哥斯达黎加|Costa Rica")},
+		{Emoji: "🇻🇬", Regex: regexp.MustCompile("英属维尔京|British Virgin Islands")},
+		{Emoji: "🇻🇮", Regex: regexp.MustCompile("美属维尔京|United States Virgin Islands")},
+		{Emoji: "🇲🇽", Regex: regexp.MustCompile("墨西哥|MX|MEX|MEX|MEXICO")},
+		{Emoji: "🇲🇪", Regex: regexp.MustCompile("黑山|Montenegro")},
+		{Emoji: "🇳🇱", Regex: regexp.MustCompile("荷兰|荷蘭|尼德蘭|阿姆斯特丹|NL|Netherlands|Amsterdam")},
+		{Emoji: "🇵🇱", Regex: regexp.MustCompile("波兰|波蘭|POL|Poland")},
+		{Emoji: "🇩🇿", Regex: regexp.MustCompile("阿尔及利亚|Algeria")},
+		{Emoji: "🇧🇦", Regex: regexp.MustCompile("波黑共和国|波黑|Bosnia and Herzegovina")},
+		{Emoji: "🇱🇮", Regex: regexp.MustCompile("列支敦士登|Liechtenstein")},
+		{Emoji: "🇷🇪", Regex: regexp.MustCompile("留尼汪|留尼旺|Réunion|Reunion")},
+		{Emoji: "🇿🇦", Regex: regexp.MustCompile("南非|约翰内斯堡|South Africa|Johannesburg")},
+		{Emoji: "🇪🇬", Regex: regexp.MustCompile("埃及|Egypt")},
+		{Emoji: "🇬🇭", Regex: regexp.MustCompile("加纳|Ghana")},
+		{Emoji: "🇲🇱", Regex: regexp.MustCompile("马里|馬里|Mali")},
+		{Emoji: "🇲🇦", Regex: regexp.MustCompile("摩洛哥|Morocco")},
+		{Emoji: "🇹🇳", Regex: regexp.MustCompile("突尼|Tunisia")},
+		{Emoji: "🇱🇾", Regex: regexp.MustCompile("利比亚|Libya")},
+		{Emoji: "🇰🇪", Regex: regexp.MustCompile("肯尼亚|肯尼亞|Kenya")},
+		{Emoji: "🇷🇼", Regex: regexp.MustCompile("卢旺达|盧旺達|Rwanda")},
+		{Emoji: "🇨🇻", Regex: regexp.MustCompile("佛得角|維德角|Cape Verde")},
+		{Emoji: "🇦🇴", Regex: regexp.MustCompile("安哥拉|Angola")},
+		{Emoji: "🇳🇬", Regex: regexp.MustCompile("尼日利亚|尼日利亞|拉各斯|Nigeria")},
+		{Emoji: "🇲🇺", Regex: regexp.MustCompile("毛里求斯|Mauritius")},
+		{Emoji: "🇴🇲", Regex: regexp.MustCompile("阿曼|Oman")},
+		{Emoji: "🇧🇭", Regex: regexp.MustCompile("巴林|Bahrain")},
+		{Emoji: "🇮🇶", Regex: regexp.MustCompile("伊拉克|Iraq")},
+		{Emoji: "🇮🇷", Regex: regexp.MustCompile("伊朗|Iran")},
+		{Emoji: "🇦🇫", Regex: regexp.MustCompile("阿富汗|Afghanistan")},
+		{Emoji: "🇵🇰", Regex: regexp.MustCompile("巴基斯坦|Pakistan|PAKISTAN")},
+		{Emoji: "🇶🇦", Regex: regexp.MustCompile("卡塔尔|卡塔爾|Qatar")},
+		{Emoji: "🇸🇾", Regex: regexp.MustCompile("叙利亚|敘利亞|Syria")},
+		{Emoji: "🇱🇰", Regex: regexp.MustCompile("斯里兰卡|斯里蘭卡|Sri Lanka")},
+		{Emoji: "🇻🇪", Regex: regexp.MustCompile("委内瑞拉|Venezuela")},
+		{Emoji: "🇬🇹", Regex: regexp.MustCompile("危地马拉|Guatemala")},
+		{Emoji: "🇵🇷", Regex: regexp.MustCompile("波多黎各|Puerto Rico")},
+		{Emoji: "🇰🇾", Regex: regexp.MustCompile("开曼群岛|開曼群島|盖曼群岛|凯门群岛|Cayman Islands")},
+		{Emoji: "🇸🇯", Regex: regexp.MustCompile("斯瓦尔巴|扬马延|Svalbard|Mayen")},
+		{Emoji: "🇭🇳", Regex: regexp.MustCompile("洪都拉斯|Honduras")},
+		{Emoji: "🇳🇮", Regex: regexp.MustCompile("尼加拉瓜|Nicaragua")},
+		{Emoji: "🇦🇶", Regex: regexp.MustCompile("南极|南|Antarctica")},
+		{Emoji: "🇨🇳", Regex: regexp.MustCompile("中国|中國|江苏|北京|上海|广州|深圳|杭州|徐州|青岛|宁波|镇江|沈阳|济南|回国|back|China")},
+	}
+	// 遍历代理列表，查找是否有国家地区的 emoji
+	for i := range proxyList {
+		hasEmoji := false
+		for _, country := range CountryEmojiRegexMap {
+			if strings.HasPrefix(proxyList[i].Name, country.Emoji) {
+				hasEmoji = true
+				break
+			}
+		}
+		if !hasEmoji {
+			for _, country := range CountryEmojiRegexMap {
+				if country.Regex.MatchString(proxyList[i].Name) {
+					proxyList[i].Name = country.Emoji + " " + proxyList[i].Name
+					break
+				}
+			}
+		}
+	}	
 	// 重名检测
 	names := make(map[string]int)
 	for i := range proxyList {
