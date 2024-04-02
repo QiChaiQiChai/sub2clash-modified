@@ -1,12 +1,10 @@
-#before:
-#  hooks:
-#    - go mod tidy
+project_name: sub2clash
 builds:
     - env:
           - CGO_ENABLED=0
       goos:
-          - linux
           - windows
+          - linux
           - darwin
       goarch:
           - amd64
@@ -14,4 +12,6 @@ builds:
       ldflags:
           - -s -w -X sub2clash/config.Version={{ .Version }}
       no_unique_dist_dir: true
-      binary: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
+archives:
+    - format: zip
+      name_template: "{{ .ProjectName }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}"
